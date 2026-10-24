@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BrandGuard AI | Dashboard</title>
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    .dashboard-card { cursor: pointer; transition: transform .2s, box-shadow .2s; }
+    .dashboard-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px #0002; }
+    .analysis-panel { margin-top: 24px; padding: 24px; border-radius: 16px; background: white; color: #222; }
+    .analysis-panel textarea, .analysis-panel input, .analysis-panel select {
+      box-sizing: border-box; width: 100%; padding: 12px; margin: 8px 0 16px;
+      border: 1px solid #bbb; border-radius: 8px; font: inherit;
+    }
+    .analysis-panel textarea { min-height: 140px; resize: vertical; }
+    .analysis-panel button, .back-button {
+      padding: 12px 18px; border: 0; border-radius: 8px; cursor: pointer;
+    }
+    .analysis-panel button { background: #2457d6; color: white; }
+    .analysis-panel button:disabled { opacity: .6; cursor: wait; }
+    .analysis-result { margin-top: 18px; padding: 16px; border-radius: 10px; background: #f0f4ff; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .hidden { display: none !important; }
+    .message { margin: 12px 0; overflow-wrap: anywhere; }
+    .issue { padding: 12px; margin: 10px 0; border-left: 4px solid #e0a020; background: #fff8e7; border-radius: 6px; }
+    .issue.high { border-left-color: #c62828; background: #fff0f0; }
+    .issue.low { border-left-color: #39834a; background: #f0fff3; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 18px 0; }
+    .stat { padding: 16px; background: #f0f4ff; border-radius: 10px; }
+    .stat strong { display: block; font-size: 1.5rem; margin-top: 6px; }
+    .field-label { display: block; margin-top: 12px; }
+    .small-note { color: #555; font-size: .9rem; }
+    .result-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+    .result-actions button.secondary { background: #475569; }
+    @media (max-width: 600px) { .analysis-panel { padding: 16px; } }
+  </style>
+</head>
+<body class="dashboard-page">
+  <header class="dashboard-header">
+    <div>
+      <h1>BrandGuard AI</h1>
+      <p>Protect your brand. Build trust.</p>
+    </div>
+    <button id="logoutButton" class="logout-button" type="button">Logout</button>
+  </header>
+
+  <main class="dashboard-main">
+    <section id="homeSection">
+      <section class="welcome-panel">
+        <p class="eyebrow">YOUR WORKSPACE</p>
+        <h2 id="welcomeHeading">Welcome to your Dashboard!</h2>
+        <p>Review content, manage brand guidelines, and monitor compliance.</p>
+      </section>
+
+      <section class="dashboard-cards">
+        <article class="dashboard-card" id="protectionCard" tabindex="0" role="button" aria-label="Open Brand Protection">
+          <div class="card-icon">🛡️</div><h3>Brand Protection</h3>
+          <p>Check content for restricted terms and potential brand risks.</p><p><strong>Click to explore →</strong></p>
+          <div class="card" id="brand-alerts-card">
+            <h2>Brand Protection Alerts</h2>
+            <p>Restricted terms and potentially unsupported claims found in your reviews.</p>
+            <div id="alerts-container"> Loading alerts...</div></div>
+
+        </article>
+        <article class="dashboard-card" id="reviewCard" tabindex="0" role="button" aria-label="Open Review Analysis">
+          <div class="card-icon">💬</div><h3>Review Analysis</h3>
+          <p>Analyze content using your brand guidelines and AI review.</p><p><strong>Click to analyze →</strong></p>
+        </article>
+        <article class="dashboard-card" id="insightsCard" tabindex="0" role="button" aria-label="Open Insights">
+          <div class="card-icon">📊</div><h3>Insights</h3>
+          <p>View review totals, average score, and recent reviews.</p><p><strong>Click to explore →</strong></p>
+        </article>
+        <article class="dashboard-card" id="guidelinesCard" tabindex="0" role="button" aria-label="Manage Brand Guidelines">
+          <div class="card-icon">📋</div><h3>Brand Guidelines</h3>
+          <p>Manage your brand voice, approved terms, and restricted terms.</p><p><strong>Click to manage →</strong></p>
+        </article>
+      </section>
+
+      <section class="dashboard-info">
+        <h3>Getting Started</h3>
+        <p>Set up your brand guidelines, then analyze content before using it publicly.</p>
+      </section>
+    </section>
+
+    <section id="reviewSection" class="analysis-panel hidden">
+      <button type="button" class="back-button" data-back>← Back to Dashboard</button>
+      <h2>💬 Review Analysis</h2>
+      <p>Paste the content you want to check against your brand guidelines.</p>
+      <label class="field-label" for="reviewText"><strong>Content to analyze</strong></label>
+      <textarea id="reviewText" maxlength="12000" placeholder="Paste an advertisement, social media post, product description, or customer-facing content..."></textarea>
+      <p id="reviewMessage" class="message" role="alert"></p>
+      <button type="button" id="analyzeButton">Analyze Content</button>
+      <div id="analysisResult" class="analysis-result hidden" aria-live="polite"></div>
+      <p class="small-note">AI suggestions may be incorrect. Verify claims and facts before publishing.</p>
+    </section>
+
+    <section id="protectionSection" class="analysis-panel hidden">
+      <button type="button" class="back-button" data-back>← Back to Dashboard</button>
+      <h2>🛡️ Brand Protection</h2>
+      <p>Paste content below to scan it for restricted terms from your saved brand guidelines.</p>
+      <label class="field-label" for="protectionText"><strong>Content to scan</strong></label>
+      <textarea id="protectionText" maxlength="12000" placeholder="Paste content to check for restricted words or phrases..."></textarea>
+      <button type="button" id="scanProtectionButton">Scan for Alerts</button>
+      <div id="protectionResult" class="analysis-result hidden" aria-live="polite"></div>
+      <p class="small-note">This local scan checks exact phrase matches. It is not a live internet brand-mention monitoring service.</p>
+    </section>
+
+    <section id="insightsSection" class="analysis-panel hidden">
+      <button type="button" class="back-button" data-back>← Back to Dashboard</button>
+      <h2>📊 Insights</h2>
+      <p>Statistics for your saved content reviews.</p>
+      <p id="insightsMessage" class="message" role="status"></p>
+      <div id="insightsStats" class="stats-grid"></div>
+      <h3>Recent Reviews</h3>
+      <div id="recentReviews"></div>
+      <button type="button" id="refreshInsightsButton">Refresh Insights</button>
+    </section>
+
+    <section id="guidelinesSection" class="analysis-panel hidden">
+      <button type="button" class="back-button" data-back>← Back to Dashboard</button>
+      <h2>📋 Brand Guidelines Management</h2>
+      <p>Update these settings. Saved guidelines are used by the Gemini review endpoint.</p>
+      <form id="guidelinesForm">
+        <label class="field-label" for="brandName"><strong>Brand Name</strong></label>
+        <input id="brandName" name="brandName" required maxlength="100">
+        <label class="field-label" for="brandVoice"><strong>Brand Voice</strong></label>
+        <input id="brandVoice" name="voice" required maxlength="500">
+        <label class="field-label" for="brandAudience"><strong>Target Audience</strong></label>
+        <input id="brandAudience" name="audience" required maxlength="500">
+        <label class="field-label" for="approvedTerms"><strong>Approved Terms</strong></label>
+        <textarea id="approvedTerms" placeholder="Separate terms with commas or put each on a new line"></textarea>
+        <label class="field-label" for="restrictedTerms"><strong>Restricted Terms</strong></label>
+        <textarea id="restrictedTerms" placeholder="Separate terms with commas or put each on a new line"></textarea>
+        <label class="field-label" for="brandFacts"><strong>Brand Rules</strong></label>
+        <textarea id="brandFacts" placeholder="Enter one rule per line"></textarea>
+        <p id="guidelinesMessage" class="message" role="status" aria-live="polite"></p>
+        <button type="submit" id="saveGuidelinesButton">Save Guidelines</button>
+      </form>
+    </section>
+  </main>
+
+  <script>
+    const sectionIds = ["homeSection", "reviewSection", "protectionSection", "insightsSection", "guidelinesSection"];
+    let currentGuidelines = {};
+    let lastReview = null;
+
+    function showSection(id) {
+      sectionIds.forEach(sectionId => {
+        document.getElementById(sectionId).classList.toggle("hidden", sectionId !== id);
+      });
+      window.scrollTo(0, 0);
+      if (id === "guidelinesSection") loadGuidelines();
+      if (id === "insightsSection") loadInsights();
+    }
+
+    document.getElementById("reviewCard").addEventListener("click", () => showSection("reviewSection"));
+    document.getElementById("protectionCard").addEventListener("click", () => showSection("protectionSection"));
+    document.getElementById("insightsCard").addEventListener("click", () => showSection("insightsSection"));
+    document.getElementById("guidelinesCard").addEventListener("click", () => showSection("guidelinesSection"));
+    document.querySelectorAll("[data-back]").forEach(button => button.addEventListener("click", () => showSection("homeSection")));
+    document.querySelectorAll(".dashboard-card").forEach(card => {
+      card.addEventListener("keydown", event => {
+        if (event.key === "Enter" || event.key === " ") { event.preventDefault(); card.click(); }
+      });
+    });
+
+    async function apiFetch(url, options = {}) {
+      const response = await fetch(url, { credentials: "same-origin", ...options });
+      let data = {};
+      try { data = await response.json(); } catch { /* response may not contain JSON */ }
+      if (response.status === 401) { window.location.href = "/login"; throw new Error("Please log in again."); }
+      if (!response.ok) throw new Error(data.error || "Request failed. Please try again.");
+      return data;
+    }
+
+    async function loadGuidelines() {
+      const message = document.getElementById("guidelinesMessage");
+      message.textContent = "Loading guidelines...";
+      try {
+        const data = await apiFetch("/api/guidelines");
+        const g = data.guidelines || {};
+        currentGuidelines = g;
+        document.getElementById("brandName").value = g.brandName || "";
+        document.getElementById("brandVoice").value = g.voice || "";
+        document.getElementById("brandAudience").value = g.audience || "";
+        document.getElementById("approvedTerms").value = (g.approvedTerms || []).join(", ");
+        document.getElementById("restrictedTerms").value = (g.restrictedTerms || []).join(", ");
+        document.getElementById("brandFacts").value = (g.facts || []).join("\n");
+        message.textContent = "";
+      } catch (error) { message.textContent = error.message; }
+    }
+
+    function splitList(value) {
+      return value.split(/[,;\n]/).map(item => item.trim()).filter(Boolean);
+    }
+
+    document.getElementById("guidelinesForm").addEventListener("submit", async event => {
+      event.preventDefault();
+      const button = document.getElementById("saveGuidelinesButton");
+      const message = document.getElementById("guidelinesMessage");
+      const guidelines = {
+        brandName: document.getElementById("brandName").value.trim(),
+        voice: document.getElementById("brandVoice").value.trim(),
+        audience: document.getElementById("brandAudience").value.trim(),
+        approvedTerms: splitList(document.getElementById("approvedTerms").value),
+        restrictedTerms: splitList(document.getElementById("restrictedTerms").value),
+        facts: splitList(document.getElementById("brandFacts").value)
+      };
+      button.disabled = true;
+      message.textContent = "Saving guidelines...";
+      try {
+        const data = await apiFetch("/api/guidelines", {
+          method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(guidelines)
+        });
+        currentGuidelines = data.guidelines || guidelines;
+        message.textContent = "✅ " + (data.message || "Guidelines saved successfully.");
+      } catch (error) { message.textContent = "❌ " + error.message; }
+      finally { button.disabled = false; }
+    });
+
+    function addText(parent, tag, text, className) {
+      const element = document.createElement(tag);
+      element.textContent = text;
+      if (className) element.className = className;
+      parent.appendChild(element);
+      return element;
+    }
+
+    function displayReview(data) {
+      const container = document.getElementById("analysisResult");
+      container.replaceChildren();
+      addText(container, "h3", "AI Content Review");
+      addText(container, "p", `Brand Safety Score: ${data.score ?? "N/A"}/100`);
+      addText(container, "p", data.summary || "Review completed.");
+      addText(container, "h4", "Issues Found");
+      const issues = Array.isArray(data.issues) ? data.issues : [];
+      if (!issues.length) addText(container, "p", "No specific issues were returned.");
+      issues.forEach(issue => {
+        const severity = String(issue.severity || "Medium");
+        const card = document.createElement("div");
+        card.className = "issue " + severity.toLowerCase();
+        addText(card, "strong", `${severity}: ${issue.type || "Content issue"}`);
+        addText(card, "p", issue.explanation || "No explanation provided.");
+        if (issue.suggestion) addText(card, "p", "Suggestion: " + issue.suggestion);
+        container.appendChild(card);
+      });
+      addText(container, "h4", "Suggested Revised Content");
+      const revised = document.createElement("textarea");
+      revised.id = "revisedContent";
+      revised.value = data.revisedContent || document.getElementById("reviewText").value.trim();
+      revised.setAttribute("aria-label", "Suggested revised content");
+      container.appendChild(revised);
+      if (data.disclaimer) addText(container, "p", data.disclaimer, "small-note");
+      const actions = document.createElement("div");
+      actions.className = "result-actions";
+      const useButton = document.createElement("button");
+      useButton.type = "button"; useButton.textContent = "Use Suggested Content";
+      useButton.addEventListener("click", () => { document.getElementById("reviewText").value = revised.value; document.getElementById("reviewMessage").textContent = "Suggested content copied into the editor. Analyze again to re-check it."; });
+      actions.appendChild(useButton);
+      const recheckButton = document.createElement("button");
+      recheckButton.type = "button"; recheckButton.textContent = "Re-analyze Edited Content"; recheckButton.className = "secondary";
+      recheckButton.addEventListener("click", () => { document.getElementById("reviewText").value = revised.value; runReview(); });
+      actions.appendChild(recheckButton);
+      const exportButton = document.createElement("button");
+      exportButton.type = "button"; exportButton.textContent = "Export Report"; exportButton.className = "secondary";
+      exportButton.addEventListener("click", () => exportReview(data, revised.value));
+      actions.appendChild(exportButton);
+      container.appendChild(actions);
+      container.classList.remove("hidden");
+    }
+
+    async function runReview() {
+      const content = document.getElementById("reviewText").value.trim();
+      const message = document.getElementById("reviewMessage");
+      const button = document.getElementById("analyzeButton");
+      const result = document.getElementById("analysisResult");
+      message.textContent = "";
+      if (!content) { message.textContent = "Please enter content to analyze first."; return; }
+      button.disabled = true; button.textContent = "Analyzing...";
+      result.classList.remove("hidden"); result.textContent = "Gemini AI is reviewing your content...";
+      try {
+        const data = await apiFetch("/api/review", {
+          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ content })
+        });
+        lastReview = data;
+        displayReview(data);
+      } catch (error) { result.textContent = error.message; }
+      finally { button.disabled = false; button.textContent = "Analyze Content"; }
+    }
+    document.getElementById("analyzeButton").addEventListener("click", runReview);
+
+    function exportReview(data, revisedContent) {
+      const lines = [
+        "BrandGuard AI - Content Review Report", "", `Date: ${data.createdAt || new Date().toISOString()}`,
+        `Brand: ${currentGuidelines.brandName || "Not specified"}`, `Score: ${data.score ?? "N/A"}/100`,
+        `Summary: ${data.summary || ""}`, "", "Original Content:", document.getElementById("reviewText").value,
+        "", "Issues:", ...(data.issues || []).map(issue => `- [${issue.severity || "Medium"}] ${issue.type || "Issue"}: ${issue.explanation || ""} Suggestion: ${issue.suggestion || ""}`),
+        "", "Revised Content:", revisedContent || "", "", "Please verify claims and facts before publishing."
+      ];
+      const blob = new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a"); link.href = url; link.download = "brandguard-review-report.txt";
+      document.body.appendChild(link); link.click(); link.remove(); URL.revokeObjectURL(url);
+    }
+
+    document.getElementById("scanProtectionButton").addEventListener("click", async () => {
+      const content = document.getElementById("protectionText").value.trim();
+      const result = document.getElementById("protectionResult");
+      result.replaceChildren(); result.classList.remove("hidden");
+      if (!content) { addText(result, "p", "Please enter content to scan."); return; }
+      try {
+        const data = await apiFetch("/api/guidelines");
+        const restricted = (data.guidelines?.restrictedTerms || []).filter(Boolean);
+        console.log("Saved restricted terms:", restricted);
+        console.log("Scanned content:", content);
+        const matches = restricted.filter(term => content.toLowerCase().includes(term.toLowerCase()));
+        addText(result, "h3", matches.length ? "⚠️ Restricted Terms Found" : "✅ No Exact Restricted-Term Matches");
+        if (matches.length) {
+          const list = document.createElement("ul");
+          matches.forEach(term => addText(list, "li", term));
+          result.appendChild(list);
+          addText(result, "p", "Review this content before publishing.");
+        } else addText(result, "p", "The scan found no exact matches for your current restricted terms. This does not guarantee compliance.");
+      } catch (error) { addText(result, "p", error.message); }
+    });
+
+    async function loadInsights() {
+      const message = document.getElementById("insightsMessage");
+      const stats = document.getElementById("insightsStats");
+      const recent = document.getElementById("recentReviews");
+      message.textContent = "Loading insights..."; stats.replaceChildren(); recent.replaceChildren();
+      try {
+        const data = await apiFetch("/api/insights");
+        const statData = [["Total Reviews", data.totalReviews ?? 0], ["Average Score", `${data.averageScore ?? 0}/100`]];
+        statData.forEach(([label, value]) => {
+          const card = document.createElement("div"); card.className = "stat";
+          addText(card, "span", label); addText(card, "strong", String(value)); stats.appendChild(card);
+        });
+        const reviews = Array.isArray(data.recentReviews) ? data.recentReviews : [];
+        if (!reviews.length) addText(recent, "p", "No reviews saved yet. Analyze some content first.");
+        reviews.forEach(review => {
+          const card = document.createElement("div"); card.className = "issue";
+          addText(card, "strong", `Score: ${review.score ?? "N/A"}/100`);
+          addText(card, "p", review.summary || "No summary available.");
+          addText(card, "p", `Issues: ${review.issuesCount ?? 0} · ${review.createdAt ? new Date(review.createdAt).toLocaleString() : "Date unavailable"}`);
+          recent.appendChild(card);
+        });
+        message.textContent = "";
+      } catch (error) { message.textContent = error.message; }
+    }
+    document.getElementById("refreshInsightsButton").addEventListener("click", loadInsights);
+
+    document.getElementById("logoutButton").addEventListener("click", async () => {
+      try {
+        const response = await fetch("/api/logout", { method: "POST", credentials: "same-origin" });
+        if (response.ok) window.location.href = "/login";
+        else alert("Logout failed. Please try again.");
+      } catch { alert("Could not connect to the server."); }
+    });
+
+    async function checkLogin() {
+      try {
+        const data = await apiFetch("/api/me");
+        if (data.user?.name) document.getElementById("welcomeHeading").textContent = `Welcome, ${data.user.name}!`;
+      } catch (error) { console.error(error); }
+    }
+    checkLogin();
+  </script>
+</body>
+</html>

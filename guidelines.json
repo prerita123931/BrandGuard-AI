@@ -1,0 +1,22 @@
+{
+  "brandName": "Northstar",
+  "voice": "Professional",
+  "audience": "Busy people and growing teams",
+  "approvedTerms": [
+    "simple",
+    "reliable",
+    "helpful"
+  ],
+  "restrictedTerms": [
+    "guaranteed results",
+    "100% risk-free",
+    "best in the world",
+    "instant success"
+  ],
+  "facts": [
+    "Do not promise outcomes that have not been verified.",
+    "Use plain language and avoid exaggerated claims.",
+    "Disclose important limitations when relevant."
+  ],
+  "updatedAt": "2026-10-24T09:50:03.845Z"
+}

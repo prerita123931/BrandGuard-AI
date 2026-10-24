@@ -1,0 +1,77 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BrandGuard AI | Login</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/auth.js" defer></script>
+</head>
+<body class="auth-page">
+  <main class="auth-container">
+    <section class="auth-card">
+      <h1>BrandGuard AI</h1>
+      <p>Protect your brand. Build trust.</p>
+
+      <div class="auth-tabs">
+        <button type="button" id="loginTab" class="tab-button active">Login</button>
+        <button type="button" id="signupTab" class="tab-button">Sign Up</button>
+      </div>
+
+      <h2 id="formTitle">Welcome Back!</h2>
+      <p id="formDescription">Login to continue to your dashboard.</p>
+
+      <form id="authForm" data-mode="login">
+        <div class="form-group" id="nameGroup" hidden>
+          <label for="name">Full Name</label>
+          <input type="text" id="name" name="name" placeholder="Enter your full name">
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" name="email" placeholder="Enter your email" required>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" placeholder="Enter your password" required>
+        </div>
+
+        <button type="submit" id="authButton" class="primary-button">Login</button>
+      </form>
+
+      <p id="authMessage" class="auth-message" aria-live="polite"></p>
+    </section>
+  </main>
+
+  <script>
+    const loginTab = document.getElementById("loginTab");
+    const signupTab = document.getElementById("signupTab");
+    const form = document.getElementById("authForm");
+    const nameGroup = document.getElementById("nameGroup");
+    const nameInput = document.getElementById("name");
+    const formTitle = document.getElementById("formTitle");
+    const formDescription = document.getElementById("formDescription");
+    const authButton = document.getElementById("authButton");
+    const authMessage = document.getElementById("authMessage");
+
+    function setMode(mode) {
+      const signup = mode === "signup";
+      form.dataset.mode = mode;
+      nameGroup.hidden = !signup;
+      nameInput.required = signup;
+      loginTab.classList.toggle("active", !signup);
+      signupTab.classList.toggle("active", signup);
+      formTitle.textContent = signup ? "Create Account" : "Welcome Back!";
+      formDescription.textContent = signup
+        ? "Sign up to protect your brand."
+        : "Login to continue to your dashboard.";
+      authButton.textContent = signup ? "Create Account" : "Login";
+      authMessage.textContent = "";
+    }
+
+    loginTab.addEventListener("click", () => setMode("login"));
+    signupTab.addEventListener("click", () => setMode("signup"));
+  </script>
+</body>
+</html>
